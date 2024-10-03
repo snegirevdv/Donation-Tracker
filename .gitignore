@@ -1,0 +1,10 @@
+postman_collection
+tests
+req.txt
+pytest.ini
+.venv
+__pycache__
+.git
+.ruff-cache
+pyproject.toml
+Makefile
