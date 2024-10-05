@@ -3,14 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_async_session
-from app.crud import donation_crud
+from app.core.db import get_session
 from app.models import Donation
 from app.schemas.donation import DonationCreate, DonationRead, DonationUpdate
+from app.services import donation_crud
 
 router = APIRouter()
 
-SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 @router.post(

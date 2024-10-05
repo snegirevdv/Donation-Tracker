@@ -5,14 +5,16 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.base import Base
+from app.models import CharityProject, DonateGenericModel, Donation
+from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate
+from app.schemas.donation import DonationCreate, DonationUpdate
 
-ModelType = TypeVar('ModelType', bound=Base)
+ModelType = TypeVar('ModelType', bound=DonateGenericModel)
 CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
 UpdateSchemaType = TypeVar('UpdateSchemaType', bound=BaseModel)
 
 
-class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class BaseDonateCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: ModelType) -> None:
         self.model: type[ModelType] = model
 
@@ -32,6 +34,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         attr = getattr(self.model, attr_name)
         query = select(self.model).where(attr == attr_value)
         return await session.scalar(query)
+
+    async def get_available_list(self, session: AsyncSession) -> list[ModelType]:
+        query = select(self.model).where(self.model.fully_invested is False)
+        result = await session.scalars(query)
+        return result.all()
 
     async def get_list(self, session: AsyncSession) -> list[ModelType]:
         query = select(self.model)
@@ -69,3 +76,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def delete(self, db_obj: ModelType, session: AsyncSession) -> None:
         await session.delete(db_obj)
         await session.commit()
+
+
+class ProjectCrud(
+    BaseDonateCrud[CharityProject, CharityProjectCreate, CharityProjectUpdate],
+):
+    pass
+
+
+class DonationCrud(BaseDonateCrud[Donation, DonationCreate, DonationUpdate]):
+    pass
+
+
+charity_project_crud = ProjectCrud(model=CharityProject)
+donation_crud = DonationCrud(model=Donation)
