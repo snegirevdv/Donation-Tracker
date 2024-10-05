@@ -13,6 +13,8 @@ class Base(DeclarativeBase):
 
 
 class DonateGenericModel(Base):
+    __abstract__ = True
+
     full_amount: Mapped[int] = mapped_column(Integer)
     invested_amount: Mapped[int] = mapped_column(Integer, default=0)
     fully_invested: Mapped[bool] = mapped_column(Boolean, default=False)

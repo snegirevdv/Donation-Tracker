@@ -56,3 +56,7 @@ class DonationRead(DonationBase):
             'close_date',
         ],
     )
+
+
+class DonationUpdate(DonationBase):
+    pass
