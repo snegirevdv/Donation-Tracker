@@ -23,7 +23,7 @@ class BaseDonateModel(BaseModel):
     invested_amount: Mapped[int] = mapped_column(Integer, default=0)
     fully_invested: Mapped[bool] = mapped_column(Boolean, default=False)
     create_date: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    close_date: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
+    close_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     @property
     def available_amount(self) -> int:
@@ -36,4 +36,4 @@ class CharityProject(BaseDonateModel):
 
 
 class Donation(BaseDonateModel):
-    comment: Mapped[str] = mapped_column(String)
+    comment: Mapped[str] = mapped_column(String, nullable=True)

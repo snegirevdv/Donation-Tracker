@@ -3,33 +3,16 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 
-class CharityProjectBase(BaseModel):
-    name: str | None = Field(
-        default=None,
+class CharityProjectCreate(BaseModel):
+    name: str = Field(
+        ...,
         min_length=5,
         max_length=100,
         description='Название проекта (от 5 до 100 символов)',
     )
-    description: str | None = Field(
-        default=None,
-        min_length=10,
-        description='Описание проекта (не менее 10 символов)',
-    )
-    full_amount: PositiveInt | None = Field(
-        default=None,
-        description='Требуемая сумма (целое число, больше 0)',
-    )
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class CharityProjectCreate(CharityProjectBase):
-    name: str = Field(
-        ...,
-        description='Название проекта (от 5 до 100 символов)',
-    )
     description: str = Field(
         ...,
+        min_length=10,
         description='Описание проекта (не менее 10 символов)',
     )
     full_amount: PositiveInt = Field(
@@ -37,40 +20,37 @@ class CharityProjectCreate(CharityProjectBase):
         description='Требуемая сумма (целое число, больше 0)',
     )
 
-
-class CharityProjectUpdate(CharityProjectBase):
-    pass
+    model_config = ConfigDict(extra='forbid')
 
 
-class CharityProjectRead(CharityProjectBase):
+class CharityProjectUpdate(BaseModel):
+    name: str | None = Field(
+        None,
+        min_length=5,
+        max_length=100,
+        description='Название проекта (от 5 до 100 символов)',
+    )
+    description: str | None = Field(
+        None,
+        min_length=10,
+        description='Описание проекта (не менее 10 символов)',
+    )
+    full_amount: PositiveInt | None = Field(
+        None,
+        description='Требуемая сумма (целое число, больше 0)',
+    )
+
+    model_config = ConfigDict(extra='forbid')
+
+
+class CharityProjectRead(BaseModel):
     id: int
-    invested_amount: PositiveInt = Field(
-        default=0,
-        description='Собранная сумма',
-    )
-    fully_invested: bool = Field(
-        default=False,
-        description='Указывает, собрана ли полная сумма для проекта',
-    )
-    create_date: datetime = Field(
-        ...,
-        description='Дата создания проекта',
-    )
-    close_date: datetime | None = Field(
-        default=None,
-        description='Дата закрытия проекта',
-    )
+    name: str
+    description: str
+    full_amount: PositiveInt
+    invested_amount: int
+    fully_invested: bool
+    create_date: datetime
+    close_date: datetime | None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        fields_order=[
-            'id',
-            'name',
-            'description',
-            'full_amount',
-            'invested_amount',
-            'fully_invested',
-            'create_date',
-            'close_date',
-        ],
-    )
+    model_config = ConfigDict(from_attributes=True)

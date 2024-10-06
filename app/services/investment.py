@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import TypeVar
 
 from sqlalchemy import func, select
@@ -12,10 +11,10 @@ ModelType = TypeVar('ModelType', bound=BaseDonateModel)
 class InvestmentService:
     async def _get_available_list(
         self,
-        entity: ModelType,
+        model: type[ModelType],
         session: AsyncSession,
     ) -> list[ModelType]:
-        query = select(entity).where(entity.fully_invested is False)
+        query = select(model).where(model.fully_invested == False)
         result = await session.scalars(query)
         return result.all()
 
@@ -38,16 +37,15 @@ class InvestmentService:
         target_list: list[ModelType],
         session: AsyncSession,
     ) -> ModelType:
-        async with session.begin():
-            for target_obj in target_list:
-                self._invest(source, target_obj)
+        for target_obj in target_list:
+            self._invest(source, target_obj)
 
-                if source.fully_invested:
-                    break
+            if source.fully_invested:
+                break
 
-            await session.refresh(source)
-            await session.commit()
-
+        session.add(source)
+        await session.commit()
+        await session.refresh(source)
         return source
 
     async def invest_donations_to_project(
@@ -68,6 +66,7 @@ class InvestmentService:
         session: AsyncSession,
     ) -> Donation:
         active_projects = await self._get_available_list(CharityProject, session)
+        print(active_projects)
         return await self._invest_between_entities(donation, active_projects, session)
 
 
