@@ -13,6 +13,6 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_session() -> AsyncGenerator[AsyncSession]:
+async def get_async_session() -> AsyncGenerator[AsyncSession]:
     async with AsyncSessionLocal() as async_session:
         yield async_session

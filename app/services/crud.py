@@ -5,40 +5,17 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject, DonateGenericModel, Donation
+from app.models import BaseDonateModel, CharityProject, Donation
 from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate
-from app.schemas.donation import DonationCreate, DonationUpdate
+from app.schemas.donation import DonationCreate
 
-ModelType = TypeVar('ModelType', bound=DonateGenericModel)
+ModelType = TypeVar('ModelType', bound=BaseDonateModel)
 CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
-UpdateSchemaType = TypeVar('UpdateSchemaType', bound=BaseModel)
 
 
-class BaseDonateCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
     def __init__(self, model: ModelType) -> None:
         self.model: type[ModelType] = model
-
-    async def get(self, obj_id: int, session: AsyncSession) -> ModelType | None:
-        query = select(self.model).where(self.model.id == obj_id)
-        return await session.scalar(query)
-
-    async def get_by_attribute(
-        self,
-        attr_name: str,
-        attr_value: str,
-        session: AsyncSession,
-    ) -> ModelType | None:
-        if not hasattr(self.model, attr_name):
-            return None
-
-        attr = getattr(self.model, attr_name)
-        query = select(self.model).where(attr == attr_value)
-        return await session.scalar(query)
-
-    async def get_available_list(self, session: AsyncSession) -> list[ModelType]:
-        query = select(self.model).where(self.model.fully_invested is False)
-        result = await session.scalars(query)
-        return result.all()
 
     async def get_list(self, session: AsyncSession) -> list[ModelType]:
         query = select(self.model)
@@ -55,10 +32,21 @@ class BaseDonateCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await session.refresh(db_obj)
         return db_obj
 
+
+class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
+    async def get(self, obj_id: int, session: AsyncSession) -> ModelType | None:
+        query = select(self.model).where(self.model.id == obj_id)
+        return await session.scalar(query)
+
+    async def get_id_by_name(self, name: str, session: AsyncSession) -> int | None:
+        query = select(self.model.id).where(self.model.name == name)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
     async def update(
         self,
         db_obj: ModelType,
-        obj_in: UpdateSchemaType,
+        obj_in: CharityProjectUpdate,
         session: AsyncSession,
     ) -> ModelType:
         obj_data = jsonable_encoder(db_obj)
@@ -78,13 +66,7 @@ class BaseDonateCrud(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await session.commit()
 
 
-class ProjectCrud(
-    BaseDonateCrud[CharityProject, CharityProjectCreate, CharityProjectUpdate],
-):
-    pass
-
-
-class DonationCrud(BaseDonateCrud[Donation, DonationCreate, DonationUpdate]):
+class DonationCrud(BaseDonateCrud[Donation, DonationCreate]):
     pass
 
 

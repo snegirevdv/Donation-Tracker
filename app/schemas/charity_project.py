@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 
 class CharityProjectBase(BaseModel):
@@ -15,9 +15,8 @@ class CharityProjectBase(BaseModel):
         min_length=10,
         description='Описание проекта (не менее 10 символов)',
     )
-    full_amount: str | None = Field(
+    full_amount: PositiveInt | None = Field(
         default=None,
-        gt=0,
         description='Требуемая сумма (целое число, больше 0)',
     )
 
@@ -33,7 +32,7 @@ class CharityProjectCreate(CharityProjectBase):
         ...,
         description='Описание проекта (не менее 10 символов)',
     )
-    full_amount: int = Field(
+    full_amount: PositiveInt = Field(
         ...,
         description='Требуемая сумма (целое число, больше 0)',
     )
@@ -45,7 +44,7 @@ class CharityProjectUpdate(CharityProjectBase):
 
 class CharityProjectRead(CharityProjectBase):
     id: int
-    invested_amount: int = Field(
+    invested_amount: PositiveInt = Field(
         default=0,
         description='Собранная сумма',
     )

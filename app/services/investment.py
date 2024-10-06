@@ -1,38 +1,74 @@
 from datetime import datetime
+from typing import TypeVar
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject, Donation
-from app.services.crud import donation_crud
+from app.models import BaseDonateModel, CharityProject, Donation
+
+ModelType = TypeVar('ModelType', bound=BaseDonateModel)
 
 
 class InvestmentService:
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+    async def _get_available_list(
+        self,
+        entity: ModelType,
+        session: AsyncSession,
+    ) -> list[ModelType]:
+        query = select(entity).where(entity.fully_invested is False)
+        result = await session.scalars(query)
+        return result.all()
 
-    def invest(self, charity_project: CharityProject, donation: Donation) -> None:
-        amount = min(charity_project.available_amount, donation.available_amount)
+    def _invest(self, project: CharityProject, donation: Donation) -> None:
+        amount = min(project.available_amount, donation.available_amount)
         donation.invested_amount += amount
-        charity_project.invested_amount += amount
+        project.invested_amount += amount
 
         if donation.available_amount == 0:
             donation.fully_invested = True
-            donation.close_date = datetime.now()
+            donation.close_date = func.now()
 
-        if charity_project.available_amount == 0:
-            charity_project.fully_invested = True
-            charity_project.close_date = datetime.now()
+        if project.available_amount == 0:
+            project.fully_invested = True
+            project.close_date = func.now()
+
+    async def _invest_between_entities(
+        self,
+        source: ModelType,
+        target_list: list[ModelType],
+        session: AsyncSession,
+    ) -> ModelType:
+        async with session.begin():
+            for target_obj in target_list:
+                self._invest(source, target_obj)
+
+                if source.fully_invested:
+                    break
+
+            await session.refresh(source)
+            await session.commit()
+
+        return source
 
     async def invest_donations_to_project(
-        self, charity_project: CharityProject
-    ) -> bool:
-        active_donations = await donation_crud.get_available_list(self.session)
+        self,
+        project: CharityProject,
+        session: AsyncSession,
+    ) -> CharityProject:
+        available_donations = await self._get_available_list(Donation, session)
+        return await self._invest_between_entities(
+            project,
+            available_donations,
+            session,
+        )
 
-        for donation in active_donations:
-            async with self.session.begin():
-                self.invest(charity_project, donation)
+    async def distribute_donation_among_projects(
+        self,
+        donation: Donation,
+        session: AsyncSession,
+    ) -> Donation:
+        active_projects = await self._get_available_list(CharityProject, session)
+        return await self._invest_between_entities(donation, active_projects, session)
 
-                if charity_project.fully_invested:
-                    return True
 
-        return False
+investment_service = InvestmentService()
