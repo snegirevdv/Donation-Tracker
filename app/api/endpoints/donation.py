@@ -39,7 +39,7 @@ async def get_all_donations(session: SessionDep) -> list[Donation]:
 
 
 @router.get(
-    '/me/donations',
+    '/my_donations',
     response_model=list[DonationRead],
     response_model_exclude={
         'invested_amount',
