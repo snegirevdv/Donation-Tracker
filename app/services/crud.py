@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import BaseDonateModel, CharityProject, Donation
+from app.models import BaseDonateModel, CharityProject, Donation, User
 from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate
 from app.schemas.donation import DonationCreate
 
@@ -23,9 +23,16 @@ class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
         return result.all()
 
     async def create(
-        self, obj_in: CreateSchemaType, session: AsyncSession
+        self,
+        obj_in: CreateSchemaType,
+        session: AsyncSession,
+        user: User | None,
     ) -> ModelType:
         obj_in_data = obj_in.model_dump()
+
+        if user is not None:
+            obj_in_data['user_id'] = user.id
+
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
         await session.commit()
@@ -66,7 +73,10 @@ class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
 
 
 class DonationCrud(BaseDonateCrud[Donation, DonationCreate]):
-    pass
+    async def get_by_user(self, session: AsyncSession, user: User) -> list[Donation]:
+        query = select(Donation).where(Donation.user_id == user.id)
+        donations = await session.scalars(query)
+        return donations.all()
 
 
 charity_project_crud = ProjectCrud(model=CharityProject)

@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from app.core.db import Base
 
@@ -14,6 +15,10 @@ class BaseModel(Base):
     @declared_attr
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
+
+
+class User(SQLAlchemyBaseUserTable[int], BaseModel):
+    pass
 
 
 class BaseDonateModel(BaseModel):
@@ -37,3 +42,10 @@ class CharityProject(BaseDonateModel):
 
 class Donation(BaseDonateModel):
     comment: Mapped[str] = mapped_column(String, nullable=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey('user.id', name='fk_user_id'),
+        nullable=True,
+    )
+
+    user: Mapped['User'] = relationship('User')

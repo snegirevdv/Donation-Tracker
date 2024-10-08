@@ -13,12 +13,13 @@ class DonationCreate(BaseModel):
 
 
 class DonationRead(BaseModel):
+    id: int
     comment: str | None
     full_amount: int
-    id: int
     invested_amount: int
     fully_invested: bool
     create_date: datetime
     close_date: datetime | None
+    user_id: int
 
     model_config = ConfigDict(from_attributes=True)

@@ -11,6 +11,7 @@ from app.api.validators import (
     check_project_open,
 )
 from app.core.db import get_async_session
+from app.core.user import current_superuser
 from app.models import CharityProject
 from app.schemas.charity_project import (
     CharityProjectCreate,
@@ -25,7 +26,11 @@ router = APIRouter()
 SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 
 
-@router.post('/', response_model=CharityProjectRead)
+@router.post(
+    '/',
+    response_model=CharityProjectRead,
+    dependencies=[Depends(current_superuser)],
+)
 async def create_new_charity_project(
     charity_project: CharityProjectCreate,
     session: SessionDep,
@@ -44,7 +49,11 @@ async def get_all_charity_projects(session: SessionDep) -> list[CharityProject]:
     return await charity_project_crud.get_list(session)
 
 
-@router.patch('/{charity_project_id}', response_model=CharityProjectRead)
+@router.patch(
+    '/{charity_project_id}',
+    response_model=CharityProjectRead,
+    dependencies=[Depends(current_superuser)],
+)
 async def partially_update_charity_project(
     charity_project_id: int,
     obj_in: CharityProjectUpdate,
@@ -60,7 +69,11 @@ async def partially_update_charity_project(
     return await charity_project_crud.update(charity_project, obj_in, session)
 
 
-@router.delete('/{charity_project_id}', response_model=CharityProjectRead)
+@router.delete(
+    '/{charity_project_id}',
+    response_model=CharityProjectRead,
+    dependencies=[Depends(current_superuser)],
+)
 async def remove_charity_project(charity_project_id: int, session: SessionDep) -> None:
     charity_project = await charity_project_crud.get(charity_project_id, session)
 
