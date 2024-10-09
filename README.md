@@ -70,5 +70,5 @@ Access the interactive docs (Swagger) at:
   curl -X POST 'http://127.0.0.1:8000/donations/' 
   -H 'Authorization: Bearer <your-token>' 
   -H 'Content-Type: application/json' 
-  -d '{\"full_amount": 100}'
+  -d '{"full_amount": 100}'
   ```
