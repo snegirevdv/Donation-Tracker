@@ -52,13 +52,16 @@ Access the interactive docs (Swagger) at:
 
 - **Get All Projects (for superuser)**:
 
-  `curl -X GET 'http://127.0.0.1:8000/projects/'`
+  ```
+  curl -X GET 'http://127.0.0.1:8000/projects/'
+  -H 'Authorization: Bearer <your-token>'
+  ```
 
 - **Get your Donations**:
 
   ```
-  curl -X GET 'http://127.0.0.1:8000/donations/my'`
-  -H 'Authorization: Bearer <your-token>'`
+  curl -X GET 'http://127.0.0.1:8000/donations/my'
+  -H 'Authorization: Bearer <your-token>'
   ```
 
 - **Create a New Donation**:
