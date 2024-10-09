@@ -1,19 +1,31 @@
+"""Main API router."""
+
 from fastapi import APIRouter
 
-from app.api.endpoints import charity_project, donation, user
+from app.api.endpoints import auth, project, donation, user
 
 router = APIRouter()
 
 router.include_router(
-    charity_project.router,
-    prefix='/charity_project',
+    project.router,
+    prefix='/projects',
     tags=['Projects'],
 )
 
 router.include_router(
     donation.router,
-    prefix='/donation',
+    prefix='/donations',
     tags=['Donations'],
 )
 
-router.include_router(user.router)
+router.include_router(
+    auth.router,
+    prefix='/auth',
+    tags=['Authentication'],
+)
+
+router.include_router(
+    user.router,
+    prefix='/users',
+    tags=['Users'],
+)

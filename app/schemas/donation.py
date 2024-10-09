@@ -2,24 +2,33 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
+from app.core import constants
+
 
 class DonationCreate(BaseModel):
     full_amount: PositiveInt = Field(
-        ..., description='Сумма пожертвования (обязательное поле)'
+        ...,
+        description=constants.Field.DONATION_FULL_AMOUNT,
     )
-    comment: str | None = Field(default=None, description='Комментарий к пожертвованию')
+    comment: str | None = Field(
+        default=None,
+        description=constants.Field.DONATION_COMMENT,
+    )
 
     model_config = ConfigDict(extra='forbid')
 
 
-class DonationRead(BaseModel):
+class BaseDonationRead(BaseModel):
     id: int
     comment: str | None
     full_amount: int
-    invested_amount: int
-    fully_invested: bool
     create_date: datetime
-    close_date: datetime | None
-    user_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ExtendedDonationRead(BaseDonationRead):
+    invested_amount: int
+    fully_invested: bool
+    close_date: datetime | None
+    user_id: int

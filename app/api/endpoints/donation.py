@@ -1,55 +1,38 @@
-from typing import Annotated
+from fastapi import APIRouter, status
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.db import get_async_session
-from app.core.user import current_superuser, current_user
-from app.models import Donation, User
-from app.schemas.donation import DonationCreate, DonationRead
-from app.services.crud import donation_crud
-from app.services.investment import investment_service
+from app.api import dependencies
+from app.models import Donation
+from app.schemas.donation import BaseDonationRead, DonationCreate, ExtendedDonationRead
+from app.services import donation_crud, investment_service
 
 router = APIRouter()
 
-SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 
-
-@router.post('/', response_model=DonationRead)
+@router.post('/', response_model=BaseDonationRead, status_code=status.HTTP_201_CREATED)
 async def create_new_donation(
     donation: DonationCreate,
-    session: SessionDep,
-    user: Annotated[User, Depends(current_user)],
+    session: dependencies.Session,
+    user: dependencies.CurrentUser,
 ) -> Donation:
-    donation = await donation_crud.create(donation, session)
+    donation = await donation_crud.create(donation, session, user)
     return await investment_service.distribute_donation_among_projects(
         donation,
         session,
-        user,
     )
 
 
 @router.get(
     '/',
-    response_model=list[DonationRead],
-    dependencies=[Depends(current_superuser)],
+    response_model=list[ExtendedDonationRead],
+    dependencies=[dependencies.current_superuser],
 )
-async def get_all_donations(session: SessionDep) -> list[Donation]:
+async def get_all_donations(session: dependencies.Session) -> list[Donation]:
     return await donation_crud.get_list(session)
 
 
-@router.get(
-    '/my_donations',
-    response_model=list[DonationRead],
-    response_model_exclude={
-        'invested_amount',
-        'fully_invested',
-        'close_date',
-        'user_id',
-    },
-)
+@router.get('/my', response_model=list[BaseDonationRead])
 async def get_my_donations(
-    session: SessionDep,
-    user: Annotated[User, Depends(current_user)],
+    session: dependencies.Session,
+    user: dependencies.CurrentUser,
 ) -> list[Donation]:
     return await donation_crud.get_by_user(session=session, user=user)

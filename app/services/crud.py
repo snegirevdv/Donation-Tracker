@@ -1,19 +1,20 @@
-from typing import Generic, TypeVar
+"""CRUD operations for SQL Alchemy models."""
+
+from typing import Generic
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import BaseDonateModel, CharityProject, Donation, User
-from app.schemas.charity_project import CharityProjectCreate, CharityProjectUpdate
+from app.models import Project, Donation, User
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.schemas.donation import DonationCreate
-
-ModelType = TypeVar('ModelType', bound=BaseDonateModel)
-CreateSchemaType = TypeVar('CreateSchemaType', bound=BaseModel)
+from app.services.types import CreateSchemaType, ModelType
 
 
 class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
+    """Provides list reading and creation operation for donate-related entities."""
+
     def __init__(self, model: ModelType) -> None:
         self.model: type[ModelType] = model
 
@@ -26,7 +27,7 @@ class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
         self,
         obj_in: CreateSchemaType,
         session: AsyncSession,
-        user: User | None,
+        user: User | None = None,
     ) -> ModelType:
         obj_in_data = obj_in.model_dump()
 
@@ -36,10 +37,13 @@ class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
         db_obj = self.model(**obj_in_data)
         session.add(db_obj)
         await session.commit()
+
         return db_obj
 
 
-class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
+class ProjectCrud(BaseDonateCrud[Project, ProjectCreate]):
+    """Additional CRUD methods for Project model."""
+
     async def get(self, obj_id: int, session: AsyncSession) -> ModelType | None:
         query = select(self.model).where(self.model.id == obj_id)
         return await session.scalar(query)
@@ -52,7 +56,7 @@ class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
     async def update(
         self,
         db_obj: ModelType,
-        obj_in: CharityProjectUpdate,
+        obj_in: ProjectUpdate,
         session: AsyncSession,
     ) -> ModelType:
         obj_data = jsonable_encoder(db_obj)
@@ -61,6 +65,9 @@ class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
+
+        if db_obj.full_amount <= db_obj.invested_amount:
+            db_obj.close_date = func.now()
 
         session.add(db_obj)
         await session.commit()
@@ -73,11 +80,13 @@ class ProjectCrud(BaseDonateCrud[CharityProject, CharityProjectCreate]):
 
 
 class DonationCrud(BaseDonateCrud[Donation, DonationCreate]):
+    """Additional CRUD methods for Donation model."""
+
     async def get_by_user(self, session: AsyncSession, user: User) -> list[Donation]:
-        query = select(Donation).where(Donation.user_id == user.id)
-        donations = await session.scalars(query)
-        return donations.all()
+        query = select(self.model).where(self.model.user_id == user.id)
+        donations = await session.execute(query)
+        return donations.scalars().all()
 
 
-charity_project_crud = ProjectCrud(model=CharityProject)
+project_crud = ProjectCrud(model=Project)
 donation_crud = DonationCrud(model=Donation)

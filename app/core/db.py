@@ -10,9 +10,10 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base SQLAlchemy model."""
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession]:
+    """Provides an asynchronous session generator for interacting with the database."""
     async with AsyncSessionLocal() as async_session:
         yield async_session
