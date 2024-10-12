@@ -14,9 +14,9 @@ async def create_new_donation(
     session: dependencies.Session,
     user: dependencies.CurrentUser,
 ) -> Donation:
-    donation = await donation_crud.create(donation, session, user)
+    donation_obj: Donation = await donation_crud.create(donation, session, user)
     return await investment_service.distribute_donation_among_projects(
-        donation,
+        donation_obj,
         session,
     )
 

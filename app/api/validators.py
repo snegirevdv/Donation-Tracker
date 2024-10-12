@@ -52,6 +52,6 @@ def check_project_not_invested(obj_db: Project) -> None:
         )
 
 
-def check_project_exists(obj_db: Project) -> None:
+def check_project_exists(obj_db: Project | None) -> None:
     if obj_db is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

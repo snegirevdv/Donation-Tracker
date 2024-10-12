@@ -4,4 +4,4 @@ These imports are required for the proper initialization and registration of db 
 """
 
 from app.core.db import Base  # noqa: F401
-from app.models import Project, Donation, User  # noqa: F401
+from app.models import Donation, Project, User  # noqa: F401

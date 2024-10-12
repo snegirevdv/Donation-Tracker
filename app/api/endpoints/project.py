@@ -19,8 +19,8 @@ async def create_new_project(
     session: dependencies.Session,
 ) -> Project:
     await validators.check_project_name_duplicate(project, session)
-    project = await project_crud.create(project, session)
-    return await investment_service.invest_donations_to_project(project, session)
+    project_obj: Project = await project_crud.create(project, session)
+    return await investment_service.invest_donations_to_project(project_obj, session)
 
 
 @router.get(
@@ -35,7 +35,7 @@ async def get_all_projects(
 
 
 @router.patch(
-    '/{id}',
+    '/{project_id}',
     response_model=ProjectRead,
     dependencies=[dependencies.current_superuser],
 )
@@ -49,13 +49,13 @@ async def update_project(
     validators.check_project_exists(project)
     validators.check_project_open(project)
     validators.check_project_full_amount_higher_than_invested(obj_in, project)
-    await validators.check_project_name_duplicate(obj_in, session)
 
+    await validators.check_project_name_duplicate(obj_in, session)
     return await project_crud.update(project, obj_in, session)
 
 
 @router.delete(
-    '/{id}',
+    '/{project_id}',
     dependencies=[dependencies.current_superuser],
     status_code=status.HTTP_204_NO_CONTENT,
 )

@@ -6,16 +6,16 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Project, Donation, User
-from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.models import Donation, Project, User
 from app.schemas.donation import DonationCreate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.services.types import CreateSchemaType, ModelType
 
 
 class BaseDonateCrud(Generic[ModelType, CreateSchemaType]):
     """Provides list reading and creation operation for donate-related entities."""
 
-    def __init__(self, model: ModelType) -> None:
+    def __init__(self, model: type[ModelType]) -> None:
         self.model: type[ModelType] = model
 
     async def get_list(self, session: AsyncSession) -> list[ModelType]:

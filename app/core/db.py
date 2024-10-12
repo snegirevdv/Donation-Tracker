@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
     """Base SQLAlchemy model."""
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession]:
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Provides an asynchronous session generator for interacting with the database."""
     async with AsyncSessionLocal() as async_session:
         yield async_session

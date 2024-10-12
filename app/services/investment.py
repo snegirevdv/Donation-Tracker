@@ -3,7 +3,7 @@ from typing import TypeVar
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import BaseDonateModel, Project, Donation
+from app.models import BaseDonateModel, Donation, Project
 
 ModelType = TypeVar('ModelType', bound=BaseDonateModel)
 
@@ -16,7 +16,7 @@ class InvestmentService:
         model: type[ModelType],
         session: AsyncSession,
     ) -> list[ModelType]:
-        query = select(model).where(model.fully_invested == False)
+        query = select(model).where(model.full_amount > model.invested_amount)
         result = await session.scalars(query)
         return result.all()
 
@@ -66,7 +66,6 @@ class InvestmentService:
         session: AsyncSession,
     ) -> Donation:
         active_projects = await self._get_available_list(Project, session)
-        print(active_projects)
         return await self._invest_between_entities(donation, active_projects, session)
 
 
