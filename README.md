@@ -25,8 +25,8 @@
 1. Clone the repository and navigate into the project directory:
 
    ```
-   git clone https://github.com/DonationTracker/donation-tracker.git`
-   cd donation-tracker
+   git clone https://github.com/snegirevdv/Donation-Tracker.git
+   cd DonationTracker
    ```
 
 2. Install dependencies and set up the environment:
@@ -52,20 +52,23 @@ Access the interactive docs (Swagger) at:
 
 - **Get All Projects (for superuser)**:
 
-  `curl -X GET 'http://127.0.0.1:8000/projects/'`
+  ```
+  curl -X GET 'http://127.0.0.1:8000/projects/'
+  -H 'Authorization: Bearer <your-token>'
+  ```
 
 - **Get your Donations**:
 
   ```
-  curl -X GET 'http://127.0.0.1:8000/donations/my'`\
-  -H 'Authorization: Bearer <your-token>'`
+  curl -X GET 'http://127.0.0.1:8000/donations/my'
+  -H 'Authorization: Bearer <your-token>'
   ```
 
 - **Create a New Donation**:
 
   ```
-  curl -X POST 'http://127.0.0.1:8000/donations/' \
-  -H 'Authorization: Bearer <your-token>' \
-  -H 'Content-Type: application/json' \
-  -d '{\"full_amount": 100}'
+  curl -X POST 'http://127.0.0.1:8000/donations/' 
+  -H 'Authorization: Bearer <your-token>' 
+  -H 'Content-Type: application/json' 
+  -d '{"full_amount": 100}'
   ```
