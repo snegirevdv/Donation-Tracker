@@ -3,9 +3,9 @@ from typing import TypeVar
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import BaseDonateModel, Donation, Project
+from app.models import Donation, Project
 
-ModelType = TypeVar('ModelType', bound=BaseDonateModel)
+ModelType = TypeVar('ModelType', bound=Project | Donation)
 
 
 class InvestmentService:
